@@ -1,3 +1,7 @@
+#Author: Lili Meng, August 10th, 2017
+#based on the orginal code revnet_model.py 
+#https://github.com/renmengye/revnet-public/blob/master/resnet/models/revnet_model.py
+
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
