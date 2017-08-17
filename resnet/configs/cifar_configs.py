@@ -83,6 +83,16 @@ class Hamiltonian38Config(ResNet32Config):
     self.filters = [32, 32, 64, 112]
     self.num_residual_units = [3, 3, 3]
 
+@RegisterConfig("hamiltonian-50")
+class Hamiltonian50Config(ResNet32Config):
+
+  def __init__(self):
+    super(Hamiltonian38Config, self).__init__()
+    self.model_class = "hamiltonian"
+    self.manual_gradients = True
+    self.filters = [32, 32, 64, 128]
+    self.num_residual_units = [4, 4, 4]
+
 
 @RegisterConfig("revnet-110")
 class RevNet110Config(ResNet110Config):

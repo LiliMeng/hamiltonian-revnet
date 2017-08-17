@@ -170,7 +170,7 @@ def train_model(exp_id,
       num_params = np.array([
           np.prod(np.array([int(ss) for ss in w.get_shape()])) for w in w_list
       ]).sum()
-      log.info("Number of parameters {}".format(num_params))
+      log.info('\033[92m'+"Number of parameters {}".format(num_params)+'\033[00m')
 
       # Set up learning rate schedule.
       if config.lr_scheduler_type == "fixed":
