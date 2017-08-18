@@ -36,6 +36,7 @@ from resnet.utils import logger
 
 log = logger.get()
 
+use_bn = False
 
 @RegisterModel("resnet")
 class ResNetModel(object):
@@ -156,6 +157,11 @@ class ResNetModel(object):
     grads = tf.gradients(cost, var_list, gate_gradients=True)
     return zip(grads, var_list)
 
+  def _bias_variable(self, shape, name):
+        """bias_variable generates a bias variable of a given shape."""
+        initial = tf.constant(0.0, shape=shape)
+        return tf.get_variable(name, dtype=tf.float32, initializer = initial)
+
   def build_inference_network(self, x):
     config = self.config
     is_training = self.is_training
@@ -168,7 +174,14 @@ class ResNetModel(object):
     with tf.variable_scope("init"):
       h = self._conv("init_conv", x, init_filter, self.config.num_channel,
                      filters[0], self._stride_arr(config.init_stride))
-      h = self._batch_norm("init_bn", h)
+
+      
+      if use_bn:
+        h = self._batch_norm("init_bn", h)
+      else:
+        h = h + self._bias_variable([filters[0]], 'init_bias')
+
+      
       h = self._relu("init_relu", h)
 
       # Max-pooling is used in ImageNet experiments to further reduce
@@ -234,8 +247,12 @@ class ResNetModel(object):
       h = concat(h, axis=3)
 
     with tf.variable_scope("unit_last"):
-      h = self._batch_norm("final_bn", h)
-      h = self._relu("final_relu", h)
+        if use_bn:
+            h = self._batch_norm("final_bn", h)
+        else:
+            h = h + self._bias_variable([filters[-1]], "final_bias")
+
+    h = self._relu("final_relu", h)
 
     h = self._global_avg_pool(h)
 

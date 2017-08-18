@@ -14,7 +14,7 @@ class ResNet32Config(object):
     self.width = 32
     self.num_channel = 3
     self.min_lrn_rate = 0.0001
-    self.base_learn_rate = 1e-1
+    self.base_learn_rate = 1e-3
     self.num_residual_units = [5, 5, 5]  # ResNet-32
     self.seed = 1234
     self.strides = [1, 2, 2]
