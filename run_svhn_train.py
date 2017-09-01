@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 """
-Train a CNN on CIFAR.
-Author: Mengye Ren (mren@cs.toronto.edu)
+Train a CNN on SVHN.
+
 
 Usage:
-python run_cifar_train.py    --model           [MODEL NAME]          \
+python run_svhn_train.py    --model           [MODEL NAME]          \
                              --config          [CONFIG FILE]         \
                              --env             [ENV FILE]            \
                              --dataset         [DATASET]             \
@@ -46,9 +46,9 @@ log = logger.get()
 
 flags = tf.flags
 flags.DEFINE_string("config", None, "Manually defined config file.")
-flags.DEFINE_string("dataset", "cifar-10", "Dataset name.")
+flags.DEFINE_string("dataset", "svhn", "Dataset name.")
 flags.DEFINE_string("id", None, "Experiment ID.")
-flags.DEFINE_string("results", "./results/cifar", "Saving folder.")
+flags.DEFINE_string("results", "./results/s", "Saving folder.")
 flags.DEFINE_string("logs", "./logs/public", "Logging folder.")
 flags.DEFINE_string("model", "resnet-32", "Model type.")
 flags.DEFINE_bool("validation", False, "Whether run validation set.")
@@ -95,7 +95,7 @@ def _get_models(config):
 
 def train_step(sess, model, batch):
   """Train step."""
-  print(batch["label"].shape)
+
   return model.train_step(sess, batch["img"], batch["label"])
 
 
@@ -213,10 +213,8 @@ def train_model(exp_id,
 def main():
   # Loads parammeters.
   config = _get_config()
-  if FLAGS.dataset == "cifar-10":
+  if FLAGS.dataset == "svhn":
     config.num_classes = 10
-  elif FLAGS.dataset == "cifar-100":
-    config.num_classes = 100
   else:
     raise ValueError("Unknown dataset name {}".format(FLAGS.dataset))
 
@@ -263,7 +261,7 @@ def main():
       cycle=False,
       prefetch=False)
   test_data = get_dataset(
-      dataset_name, test_str, data_aug=False, cycle=False, prefetch=False)
+      dataset_name, test_str, num_batches=100, data_aug=False, cycle=False, prefetch=False)
 
   # Trains a model.
   acc = train_model(

@@ -14,7 +14,7 @@ class ResNet32Config(object):
     self.width = 32
     self.num_channel = 3
     self.min_lrn_rate = 0.0001
-    self.base_learn_rate = 1e-3
+    self.base_learn_rate = 0.1
     self.num_residual_units = [5, 5, 5]  # ResNet-32
     self.seed = 1234
     self.strides = [1, 2, 2]
@@ -25,10 +25,10 @@ class ResNet32Config(object):
     self.use_bottleneck = False
     self.relu_leakiness = False
     self.filters = [16, 16, 32, 64]
-    self.wd = 2e-4
+    self.wd = 4e-4
     self.optimizer = "mom"
-    self.max_train_iter = 80000
-    self.lr_decay_steps = [40000, 60000]
+    self.max_train_iter = 90000
+    self.lr_decay_steps = [50000, 70000]
     self.lr_scheduler_type = "fixed"
     self.lr_list = [1e-2, 1e-3]
     self.momentum = 0.9
@@ -87,7 +87,7 @@ class Hamiltonian38Config(ResNet32Config):
 class Hamiltonian50Config(ResNet32Config):
 
   def __init__(self):
-    super(Hamiltonian38Config, self).__init__()
+    super(Hamiltonian50Config, self).__init__()
     self.model_class = "hamiltonian"
     self.manual_gradients = True
     self.filters = [32, 32, 64, 128]

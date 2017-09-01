@@ -3,6 +3,7 @@ from __future__ import (absolute_import, division, print_function,
 
 from resnet.data.cifar10 import CIFAR10Dataset
 from resnet.data.cifar100 import CIFAR100Dataset
+from resnet.data.svhn  import SVHNDataset
 from resnet.utils.batch_iter import BatchIterator
 from resnet.utils.concurrent_batch_iter import ConcurrentBatchIterator
 
@@ -39,6 +40,18 @@ def get_dataset(name,
   elif name == "cifar-100":
     dp = CIFAR100Dataset(
         "data/cifar-100", split, data_aug=data_aug, whiten=False, div255=False)
+    return get_iter(
+        dp,
+        batch_size=batch_size,
+        shuffle=shuffle,
+        cycle=cycle,
+        prefetch=prefetch,
+        num_worker=20,
+        queue_size=300,
+        num_batches=num_batches)
+  elif name == "svhn":
+    dp = SVHNDataset(
+        "data/svhn", split, data_aug=False, whiten=False, div255=False)
     return get_iter(
         dp,
         batch_size=batch_size,

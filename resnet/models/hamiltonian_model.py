@@ -93,7 +93,7 @@ class HamiltonianModel(ResNetModel):
                         add_bn_ops=True):
         """Transformation applied on residual units."""
         filter_size = 3
-
+     
         if self.config.filter_initialization == "normal":
             n = filter_size * filter_size * out_filter
             init_method = "truncated_normal"
@@ -129,7 +129,7 @@ class HamiltonianModel(ResNetModel):
 
             x = self._relu("relu2", x)
             x = self._conv2d_transpose(x, weight_K)
-        
+            
 
         return x*0.1
 
@@ -388,8 +388,6 @@ class HamiltonianModel(ResNetModel):
                         map(try_get_variable, b1w_names))
       b2w_list = filter(lambda x: x is not None,
                         map(try_get_variable, b2w_names))
-  
-   
 
     w_list = list(fw_list) + list(gw_list)
     dfw = tf.gradients([y1_, y2_], fw_list, [dy1, dy2], gate_gradients=True)
@@ -417,6 +415,8 @@ class HamiltonianModel(ResNetModel):
     print("residual gradient computation is done")
     return dx, w_list, dw_list
 
+
+
   def _compute_gradients(self, cost):
     """Computes gradients.
     Args:
@@ -431,11 +431,10 @@ class HamiltonianModel(ResNetModel):
     g = tf.get_default_graph()
     tf.get_variable_scope().reuse_variables()
     num_stages = len(self.config.num_residual_units)
-    if use_bn:
-        beta_final = tf.get_variable("unit_last/final_bn/beta")
-        gamma_final = tf.get_variable("unit_last/final_bn/gamma")
-    else:
-        bias_final = tf.get_variable("unit_last/final_bias")
+    
+    beta_final = tf.get_variable("unit_last/final_bn/beta")
+    gamma_final = tf.get_variable("unit_last/final_bn/gamma")
+   
     w_final = tf.get_variable("logit/w")
     b_final = tf.get_variable("logit/b")
     filters = [ff for ff in self.config.filters]  # Copy filter config.
@@ -450,20 +449,13 @@ class HamiltonianModel(ResNetModel):
 
     grads_list = []
     vars_list = []
-    if use_bn:
-        var_final = [beta_final, gamma_final, w_final, b_final]
-    else:
-        var_final = [bias_final, w_final, b_final]
-
+    var_final = [beta_final, gamma_final, w_final, b_final]
+   
     h1, h2 = self._saved_hidden[-1]
     h1, h2 = tf.stop_gradient(h1), tf.stop_gradient(h2)
     h = _concat([h1, h2], axis=3)
     with tf.variable_scope("unit_last"):
-      if use_bn:
-          h = self._batch_norm("final_bn", h, add_ops=False)
-      else:
-          h = h + bias_final
-
+      h = self._batch_norm("final_bn", h, add_ops=False)
       h = self._relu("final_relu", h)
 
     h = self._global_avg_pool(h)
@@ -533,13 +525,10 @@ class HamiltonianModel(ResNetModel):
 
     h_grad = _concat(h_grad, axis=3)
     w_init = tf.get_variable("init/init_conv/w")
-    if use_bn:
-        beta_init = tf.get_variable("init/init_bn/beta")
-        gamma_init = tf.get_variable("init/init_bn/gamma")
-        var_init = [beta_init, gamma_init, w_init]
-    else:
-        bias_init = tf.get_variable("init/init_bias")
-        var_init = [w_init, bias_init] 
+ 
+    beta_init = tf.get_variable("init/init_bn/beta")
+    gamma_init = tf.get_variable("init/init_bn/gamma")
+    var_init = [beta_init, gamma_init, w_init]
     _grads = tf.gradients(h, var_init, h_grad)
     grads_list.extend(_grads)
     vars_list.extend(var_init)

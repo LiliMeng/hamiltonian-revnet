@@ -92,6 +92,20 @@ class ResNetModel(object):
       xent = tf.reduce_mean(xent, name="xent")
       cost = xent
       cost += self._decay()
+      weight_smoothness_rate = 0.0003
+      num_units = len(self.config.num_residual_units)
+      print("num_units")
+      print(num_units)
+
+      num_blocks=self.config.num_residual_units
+      print("num_blocks")
+      print(num_blocks)
+      
+      weight_smoothness = self._weight_smoothness(weight_smoothness_rate, num_units, num_blocks)
+      print("weight_smoothness")
+      print(weight_smoothness)
+
+      cost += weight_smoothness
 
     self._cost = cost
     self._input = x
@@ -176,11 +190,8 @@ class ResNetModel(object):
                      filters[0], self._stride_arr(config.init_stride))
 
       
-      if use_bn:
-        h = self._batch_norm("init_bn", h)
-      else:
-        h = h + self._bias_variable([filters[0]], 'init_bias')
-
+      
+      h = self._batch_norm("init_bn", h)
       
       h = self._relu("init_relu", h)
 
@@ -247,11 +258,8 @@ class ResNetModel(object):
       h = concat(h, axis=3)
 
     with tf.variable_scope("unit_last"):
-        if use_bn:
-            h = self._batch_norm("final_bn", h)
-        else:
-            h = h + self._bias_variable([filters[-1]], "final_bias")
-
+        h = self._batch_norm("final_bn", h)
+        
     h = self._relu("final_relu", h)
 
     h = self._global_avg_pool(h)
@@ -436,6 +444,35 @@ class ResNetModel(object):
     else:
       log.warning("No weight decay variables!")
       return 0.0
+
+  def _weight_smoothness(self, weight_smoothness_rate, num_units, num_blocks):
+      """L2 smoothness weight decay loss"""
+
+      def get_weight_block(block_number, unit_number, keyword):
+          """Get weight variable in block block_number and unit unit_number with keyword"""
+          for var in tf.trainable_variables():
+              if var.op.name.find(r"unit_" + str(unit_number)+"_"+str(block_number)) >0 and var.op.name.find(keyword)>0:
+                  return var
+
+      costs = []
+      for k in range(num_units):
+          for j in range(num_blocks[k]-1):
+              var_K1 = get_weight_block(j, k, r'f/w')
+              var_K1_plus = get_weight_block(j+1, k, r'f/w')
+             # if (var_K1!=None and var_K1_plus!=None):
+              if (var_K1!=None and var_K1_plus!=None and var_K1[2]==var_K1_plus[2]):
+                  costs.append(tf.nn.l2_loss(var_K1 - var_K1_plus))
+
+              var_K2 = get_weight_block(j, k, r'g/w')
+              var_K2_plus = get_weight_block(j+1, k, r'g/w')
+              if(var_K2 != None and var_K2_plus !=None and var_K2[2]==var_K2_plus[2]):
+                  costs.append(tf.nn.l2_loss(var_K2 - var_K2_plus))
+
+      if (len(costs)==0):
+          return 0
+      else:
+          return tf.multiply(weight_smoothness_rate, tf.add_n(costs))
+          
 
   def _conv(self, name, x, filter_size, in_filters, out_filters, strides):
     """Convolution."""
